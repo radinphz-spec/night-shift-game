@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>NIGHT SHIFT | شیفت شب</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<div id="game-canvas"></div>
+<div id="vignette"></div>
+<div id="blood-flash"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+<div id="hud-top">
+<div class="hud-box">شب <span id="h-night">1</span> / 7</div>
+<div class="hud-box" id="h-clock">23:00</div>
+<div class="hud-box">💰 <span id="h-money">0</span></div>
+<div class="hud-box" id="h-lives">❤️❤️❤️</div>
+</div>
+<div id="hud-second">
+<div class="hud-box small">⛽ سوخت: <div id="fuel-bar"><div id="fuel-fill"></div></div> <span id="h-fuel">100%</span></div>
+<div class="hud-box small">🧍 مشتری: <span id="h-cust">0</span></div>
+<div class="hud-box small" id="h-task-mini">وظایف: 0/0</div>
+</div>
+<div id="hud-btns">
+<button id="btn-notebook" class="hbtn">📓 دفترچه (N)</button>
+<button id="btn-shop" class="hbtn">🛒 فروشگاه (B)</button>
+<button id="btn-flash" class="hbtn">🔦 چراغ (F)</button>
+<button id="btn-pause" class="hbtn">⏸</button>
+</div>
+<div id="interact-prompt" class="hidden"><span id="interact-text">E - تعامل</span></div>
+<div id="carry-label" class="hidden">📦 جعبه دست شماست</div>
+<div id="toast" class="hidden"></div>
+</div>
+
+<!-- Touch -->
+<div id="touch-ui" class="hidden">
+<div id="joy-base"><div id="joy-knob"></div></div>
+<div id="touch-btns">
+<button id="t-interact">👆<small>E</small></button>
+<button id="t-run">🏃<small>بدو</small></button>
+<button id="t-flash">🔦</button>
+<button id="t-note">📓</button>
+<button id="t-shop">🛒</button>
+</div>
+</div>
+
+<!-- Main Menu -->
+<div id="main-menu" class="overlay">
+<div class="menu-box horror">
+<div id="game-title">NIGHT SHIFT</div>
+<div id="game-sub">شیفت شب | پمپ‌بنزین دورافتاده | هفت شب تا ساعت ۶ صبح زنده بمان</div>
+<button class="mbtn" id="m-start">START — شروع / ادامه</button>
+<button class="mbtn" id="m-options">OPTIONS — تنظیمات</button>
+<button class="mbtn" id="m-diff">DIFFICULTY — درجه سختی</button>
+<div id="menu-save-info"></div>
+<div class="hint">کامپیوتر: WASD + ماوس + E | موبایل: جوی‌استیک + درگ. هدفون بزنید.</div>
+</div>
+</div>
+
+<!-- Options -->
+<div id="options-menu" class="overlay hidden">
+<div class="menu-box">
+<h2>OPTIONS — تنظیمات</h2>
+<label>🔊 صدا <input type="range" id="opt-sound" min="0" max="100" value="80"></label>
+<label>🎵 موسیقی/رادیو <input type="range" id="opt-music" min="0" max="100" value="60"></label>
+<label>🎥 حساسیت دوربین <input type="range" id="opt-sens" min="20" max="200" value="100"></label>
+<label>✨ گرافیک <select id="opt-graph"><option value="low">کم (موبایل)</option><option value="high" selected>بالا</option></select></label>
+<label>👹 مدت حضور هیولا (ثانیه) <select id="opt-mtime"><option value="60">60</option><option value="120" selected>120</option><option value="240">240</option></select></label>
+<button class="mbtn" id="opt-back">بازگشت</button>
+</div>
+</div>
+
+<!-- Difficulty -->
+<div id="difficulty-menu" class="overlay hidden">
+<div class="menu-box">
+<h2>DIFFICULTY — انتخاب سختی</h2>
+<div class="diff-cards">
+<button class="diff-card" data-d="EASY"><b>EASY — آسان</b><span>۳ جان داری. هر بار هیولا بگیرد ۱ جان کم می‌شود. تا جان هست ادامه می‌دهی. با تمام شدن هر ۳ جان، همان شب از ۰۰:۰۰ تکرار می‌شود.</span></button>
+<button class="diff-card" data-d="NORMAL"><b>NORMAL — عادی</b><span>سیستم جان نداری. اگر هیولا بگیرد همان شب از ۰۰:۰۰ تکرار می‌شود ولی پیشرفت شب‌های قبل حفظ می‌شود.</span></button>
+<button class="diff-card" data-d="HARD"><b>HARD — سخت</b><span>فقط یک فرصت. اگر هیولا بگیرد کل بازی از شب اول پاک می‌شود و همه پیشرفت از بین می‌رود.</span></button>
+</div>
+<div id="diff-current">فعلی: NORMAL</div>
+<button class="mbtn" id="diff-back">بازگشت</button>
+</div>
+</div>
+
+<!-- Boss call -->
+<div id="boss-modal" class="overlay hidden">
+<div class="menu-box">
+<h2 id="boss-title">📞 تماس رئیس — شب 1</h2>
+<p id="boss-text"></p>
+<ul id="boss-tasks"></ul>
+<button class="mbtn" id="boss-start">شروع شیفت</button>
+</div>
+</div>
+
+<!-- Notebook -->
+<div id="notebook" class="overlay hidden">
+<div class="notebook-paper" id="notebook-paper">
+<div id="notebook-blood">🩸</div>
+<h3 id="nb-title">دفترچه شیفت — صفحه 1</h3>
+<div id="nb-content"></div>
+<div class="nb-nav">
+<button id="nb-prev">◀ صفحه قبل</button>
+<button id="nb-next">صفحه بعد ▶</button>
+<button id="nb-close">بستن (N)</button>
+</div>
+</div>
+</div>
+
+<!-- Shop -->
+<div id="shop-modal" class="overlay hidden">
+<div class="menu-box wide">
+<h2>🛒 فروشگاه تجهیزات</h2>
+<div>پول شما: <b id="shop-money">0</b> تومان</div>
+<div id="shop-grid"></div>
+<h3>🎒 موجودی شما (کلیک برای استفاده)</h3>
+<div id="inv-grid"></div>
+<button class="mbtn" id="shop-close">بستن (B)</button>
+</div>
+</div>
+
+<!-- Dialogue -->
+<div id="dialogue" class="overlay hidden">
+<div class="menu-box">
+<h3 id="dlg-name">مشتری</h3>
+<p id="dlg-text"></p>
+<div id="dlg-choices"></div>
+</div>
+</div>
+
+<!-- Pause -->
+<div id="pause-menu" class="overlay hidden">
+<div class="menu-box">
+<h2>⏸ توقف</h2>
+<button class="mbtn" id="p-resume">ادامه (Esc)</button>
+<button class="mbtn" id="p-save">💾 ذخیره</button>
+<button class="mbtn" id="p-exit">خروج به منو</button>
+</div>
+</div>
+
+<div id="end-screen" class="overlay hidden">
+<div class="menu-box horror">
+<h2 id="end-title">پایان شیفت</h2>
+<p id="end-text"></p>
+<button class="mbtn" id="end-btn">ادامه</button>
+</div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
